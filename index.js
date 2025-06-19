@@ -4,16 +4,12 @@ const app=express()
 const cors =require('cors')
 const port = process.env.PORT || 5000
 const { MongoClient, ServerApiVersion } = require('mongodb');
+const jwt = require("jsonwebtoken")
 
 // middleware----------
 app.use(cors())
 app.use(express.json())
 
-
-
-app.get("/",async (req,res)=>{
-    res.send("welcome pet word")
-})
 
 const uri =`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.hhpkb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -33,15 +29,25 @@ async function run() {
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
+     
+    // jwt---------------
+     app.post("/jwt",async(req,res)=>{
+          const userEmail = req.body;
+          console.log(userEmail)
+          const token=jwt.sign(userEmail,process.env.ACCESS_TOKEN_KEY,{expiresIn:'1h'})
+          res.send({token})
+     })
   } finally {
     // Ensures that the client will close when you finish/error
-    await client.close();
+    // await client.close();
   }
 }
 run().catch(console.dir);
 
 
-
+app.get("/",async (req,res)=>{
+    res.send("welcome pet word")
+})
 app.listen(port,()=>{
     console.log(`pet world is running : ${port}`)
 })
