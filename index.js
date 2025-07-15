@@ -3,7 +3,7 @@ const express = require('express')
 const app = express()
 const cors = require('cors')
 const port = process.env.PORT || 5000
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require("jsonwebtoken")
 
 // middleware----------
@@ -69,6 +69,16 @@ async function run() {
       }
     })
    
+    app.get("/allPet/:id" ,async(req,res)=>{
+        const id = req.params.id
+        const filter ={_id : new ObjectId(id)}
+        try{
+              const result = await collectionsOfPets.findOne(filter)
+              res.send(result)
+        }catch(err){
+             res.status(500).send({err:err.message})
+        }
+    })
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
