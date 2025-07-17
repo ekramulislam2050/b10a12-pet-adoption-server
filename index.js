@@ -34,7 +34,7 @@ async function run() {
     // collections-----------------
     const db = client.db("pet_adopt_nest")
     const collectionsOfPets = db.collection("pets")
-
+    const collectionOfAdoptPets = db.collection("adoptPets")
     // verifyToken--------------------
 
     const verifyToken = (req, res, next) => {
@@ -54,7 +54,7 @@ async function run() {
     // jwt---------------
     app.post("/jwt", async (req, res) => {
       const userEmail = req.body;
-      console.log(userEmail)
+      // console.log(userEmail)
       const token = jwt.sign(userEmail, process.env.ACCESS_TOKEN_KEY, { expiresIn: '1h' })
       res.send({ token })
     })
@@ -68,16 +68,29 @@ async function run() {
         res.status(500).send({ error: error.message })
       }
     })
-   
-    app.get("/allPet/:id" ,async(req,res)=>{
+
+    // specific data-------------
+    app.get("/allPet/:id", async (req, res) => {
+
+      try {
         const id = req.params.id
-        const filter ={_id : new ObjectId(id)}
-        try{
-              const result = await collectionsOfPets.findOne(filter)
-              res.send(result)
-        }catch(err){
-             res.status(500).send({err:err.message})
-        }
+        const filter = { _id: new ObjectId(id) }
+        const result = await collectionsOfPets.findOne(filter)
+        res.send(result)
+      } catch (err) {
+        res.status(500).send({ err: err.message })
+      }
+    })
+    
+    // post adopt data----------
+    app.post("/adoptPets", async (req, res) => {
+      try {
+        const adoptPet = req.body
+        const result = await collectionOfAdoptPets.insertOne(adoptPet)
+        res.send(result)
+      } catch (err) {
+        res.status(500).send({ err: err.message })
+      }
     })
   } finally {
     // Ensures that the client will close when you finish/error
