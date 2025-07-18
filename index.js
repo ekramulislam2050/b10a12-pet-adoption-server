@@ -81,7 +81,7 @@ async function run() {
         res.status(500).send({ err: err.message })
       }
     })
-    
+
     // post adopt data----------
     app.post("/adoptPets", async (req, res) => {
       try {
@@ -92,6 +92,27 @@ async function run() {
         res.status(500).send({ err: err.message })
       }
     })
+
+// available pets-----------
+    
+   app.get("/availablePets",async(req,res)=>{
+        try{
+           const adoptPetsId = await collectionOfAdoptPets.find({},{projection:{petId:1}}).toArray()
+           const petIds = adoptPetsId
+           .filter(pet=>ObjectId.isValid(pet.petId))
+           .map(pet=>pet.petId)
+        
+           const availablePets = await collectionsOfPets.find({
+             _id:{$nin:petIds.map(id=>new ObjectId(id))}
+           }).toArray()
+           res.send(availablePets)
+        }catch(err){
+             res.status(500).send({err:err.message})
+        }
+   })
+
+
+
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
