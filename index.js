@@ -35,6 +35,7 @@ async function run() {
     const db = client.db("pet_adopt_nest")
     const collectionsOfPets = db.collection("pets")
     const collectionOfAdoptPets = db.collection("adoptPets")
+    const createDonationCampaignCollection=db.collection("create_donation_campaign")
     // verifyToken--------------------
 
     const verifyToken = (req, res, next) => {
@@ -111,6 +112,16 @@ async function run() {
         }
    })
 
+  //  post create donation campaign data----------------
+  app.post("/createDonationCampaign",async(req,res)=>{
+      try{
+        const createDonationCampaign=req.body
+      const result = await createDonationCampaignCollection.insertOne(createDonationCampaign)
+      res.send(result)
+      }catch(err){
+        res.status(500).send({err:err.message})
+      }
+  })
 
 
   } finally {
