@@ -133,6 +133,17 @@ async function run() {
             res.status(500).send({err:err.message})
       }
   })
+  // get specific cdcData by id-----------
+  app.get("/cdcData/:id",async(req,res)=>{
+      try{
+          const id = req.params.id
+          const filter={_id: new ObjectId(id)}
+          const result = await createDonationCampaignCollection.findOne(filter)
+          res.send(result)
+      }catch(err){
+         res.status(500).send({err:err.message})
+      }
+  })
 
   } finally {
     // Ensures that the client will close when you finish/error
