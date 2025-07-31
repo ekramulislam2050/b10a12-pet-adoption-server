@@ -123,6 +123,16 @@ async function run() {
       }
   })
 
+  // get create donation campaign-------------
+  app.get("/cdcData",async(req,res)=>{
+      try{
+           const query={}
+           const result =await createDonationCampaignCollection.find(query).toArray()
+           res.send(result)
+      }catch(err){
+            res.status(500).send({err:err.message})
+      }
+  })
 
   } finally {
     // Ensures that the client will close when you finish/error
