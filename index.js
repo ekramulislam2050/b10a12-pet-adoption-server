@@ -5,6 +5,7 @@ const cors = require('cors')
 const port = process.env.PORT || 5000
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require("jsonwebtoken")
+const stripe = require("stripe")(process.env.STRIPE_PAYMENT_SK)
 
 // middleware----------
 app.use(cors())
@@ -35,7 +36,7 @@ async function run() {
     const db = client.db("pet_adopt_nest")
     const collectionsOfPets = db.collection("pets")
     const collectionOfAdoptPets = db.collection("adoptPets")
-    const createDonationCampaignCollection=db.collection("create_donation_campaign")
+    const createDonationCampaignCollection = db.collection("create_donation_campaign")
     // verifyToken--------------------
 
     const verifyToken = (req, res, next) => {
@@ -94,56 +95,76 @@ async function run() {
       }
     })
 
-// available pets-----------
-    
-   app.get("/availablePets",async(req,res)=>{
-        try{
-           const adoptPetsId = await collectionOfAdoptPets.find({},{projection:{petId:1}}).toArray()
-           const petIds = adoptPetsId
-           .filter(pet=>ObjectId.isValid(pet.petId))
-           .map(pet=>pet.petId)
-        
-           const availablePets = await collectionsOfPets.find({
-             _id:{$nin:petIds.map(id=>new ObjectId(id))}
-           }).toArray()
-           res.send(availablePets)
-        }catch(err){
-             res.status(500).send({err:err.message})
+    // available pets-----------
+
+    app.get("/availablePets", async (req, res) => {
+      try {
+        const adoptPetsId = await collectionOfAdoptPets.find({}, { projection: { petId: 1 } }).toArray()
+        const petIds = adoptPetsId
+          .filter(pet => ObjectId.isValid(pet.petId))
+          .map(pet => pet.petId)
+
+        const availablePets = await collectionsOfPets.find({
+          _id: { $nin: petIds.map(id => new ObjectId(id)) }
+        }).toArray()
+        res.send(availablePets)
+      } catch (err) {
+        res.status(500).send({ err: err.message })
+      }
+    })
+
+    //  post create donation campaign data----------------
+    app.post("/createDonationCampaign", async (req, res) => {
+      try {
+        const createDonationCampaign = req.body
+        const result = await createDonationCampaignCollection.insertOne(createDonationCampaign)
+        res.send(result)
+      } catch (err) {
+        res.status(500).send({ err: err.message })
+      }
+    })
+
+    // get create donation campaign-------------
+    app.get("/cdcData", async (req, res) => {
+      try {
+        const query = {}
+        const result = await createDonationCampaignCollection.find(query).toArray()
+        res.send(result)
+      } catch (err) {
+        res.status(500).send({ err: err.message })
+      }
+    })
+    // get specific cdcData by id-----------
+    app.get("/cdcData/:id", async (req, res) => {
+      try {
+        const id = req.params.id
+        const filter = { _id: new ObjectId(id) }
+        const result = await createDonationCampaignCollection.findOne(filter)
+        res.send(result)
+      } catch (err) {
+        res.status(500).send({ err: err.message })
+      }
+    })
+
+    // stripe payment related API------------
+    app.post("/create_payment_intent", async (req, res) => {
+      try {
+        const { price } = req.body
+        if(!price){
+          return res.status(400).send({error:"price is require"})
         }
-   })
-
-  //  post create donation campaign data----------------
-  app.post("/createDonationCampaign",async(req,res)=>{
-      try{
-        const createDonationCampaign=req.body
-      const result = await createDonationCampaignCollection.insertOne(createDonationCampaign)
-      res.send(result)
-      }catch(err){
-        res.status(500).send({err:err.message})
-      }
-  })
-
-  // get create donation campaign-------------
-  app.get("/cdcData",async(req,res)=>{
-      try{
-           const query={}
-           const result =await createDonationCampaignCollection.find(query).toArray()
-           res.send(result)
-      }catch(err){
-            res.status(500).send({err:err.message})
-      }
-  })
-  // get specific cdcData by id-----------
-  app.get("/cdcData/:id",async(req,res)=>{
-      try{
-          const id = req.params.id
-          const filter={_id: new ObjectId(id)}
-          const result = await createDonationCampaignCollection.findOne(filter)
-          res.send(result)
-      }catch(err){
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: parseInt((price * 100)),
+          currency: "usd",
+          payment_method_types: ['card']
+        })
+        res.send({
+          clientSecret: paymentIntent.client_secret
+        })
+      } catch (err) {
          res.status(500).send({err:err.message})
       }
-  })
+    })
 
   } finally {
     // Ensures that the client will close when you finish/error
