@@ -36,7 +36,11 @@ async function run() {
     const db = client.db("pet_adopt_nest")
     const collectionsOfPets = db.collection("pets")
     const collectionOfAdoptPets = db.collection("adoptPets")
-    const createDonationCampaignCollection = db.collection("create_donation_campaign")
+    const createDonationCampaignCollection = db.collection
+      ("create_donation_campaign")
+    const collectionOfDonationPayment = db.collection("donation_payment")
+
+
     // verifyToken--------------------
 
     const verifyToken = (req, res, next) => {
@@ -149,12 +153,13 @@ async function run() {
     // stripe payment related API------------
     app.post("/create_payment_intent", async (req, res) => {
       try {
-        const { price } = req.body
-        if(!price){
-          return res.status(400).send({error:"price is require"})
+        const { donationAmount } = req.body
+        console.log(donationAmount, "donationAmount")
+        if (!donationAmount) {
+          return res.status(400).send({ error: "donationAmount is require" })
         }
         const paymentIntent = await stripe.paymentIntents.create({
-          amount: parseInt((price * 100)),
+          amount: parseInt((donationAmount * 100)),
           currency: "usd",
           payment_method_types: ['card']
         })
@@ -162,9 +167,22 @@ async function run() {
           clientSecret: paymentIntent.client_secret
         })
       } catch (err) {
-         res.status(500).send({err:err.message})
+        res.status(500).send({ err: err.message })
       }
     })
+
+    // post to donation payment collection--------
+    app.post("/donationPayment", async (req, res) => {
+      try {
+        const details = req.body
+        const result = await collectionOfDonationPayment.insertOne(details)
+        res.send(result)
+      } catch (err) {
+         res.status(500).send({error:err.message})
+      }
+    })
+
+
 
   } finally {
     // Ensures that the client will close when you finish/error
