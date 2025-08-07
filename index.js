@@ -39,6 +39,7 @@ async function run() {
     const createDonationCampaignCollection = db.collection
       ("create_donation_campaign")
     const collectionOfDonationPayment = db.collection("donation_payment")
+    const collectionOfRecommendedDonation = db.collection("recommended_donation")
 
 
     // verifyToken--------------------
@@ -63,6 +64,28 @@ async function run() {
       // console.log(userEmail)
       const token = jwt.sign(userEmail, process.env.ACCESS_TOKEN_KEY, { expiresIn: '1h' })
       res.send({ token })
+    })
+
+    //  get recommended donation data-----------
+    app.get("/recommended_donation", async (req, res) => {
+      try {
+        const result = await collectionOfRecommendedDonation.find({}).toArray();
+        res.send(result)
+      } catch (err) {
+        res.status(500).send({ error: err.message })
+      }
+    })
+
+    // get specific recommended donation data by id----------
+    app.get("/recommended_donation/:id", async (req, res) => {
+      try {
+        const id = req.params.id
+        const filter = { _id: new ObjectId(id) }
+        const result = await collectionOfRecommendedDonation.findOne(filter)
+        res.send(result)
+      } catch (err) {
+        res.status(500).send({ error: err.message })
+      }
     })
 
     // allData -----------------
@@ -178,7 +201,7 @@ async function run() {
         const result = await collectionOfDonationPayment.insertOne(details)
         res.send(result)
       } catch (err) {
-         res.status(500).send({error:err.message})
+        res.status(500).send({ error: err.message })
       }
     })
 
