@@ -151,16 +151,19 @@ async function run() {
       }
     })
 
-    // get create donation campaign-------------
+    // get create donation campaign with aggregate-------------
     app.get("/cdcData", async (req, res) => {
       try {
         const query = {}
         const result = await createDonationCampaignCollection.find(query).toArray()
+
         res.send(result)
+        console.log(result)
       } catch (err) {
         res.status(500).send({ err: err.message })
       }
     })
+
     // get specific cdcData by id-----------
     app.get("/cdcData/:id", async (req, res) => {
       try {
@@ -199,6 +202,15 @@ async function run() {
       try {
         const details = req.body
         const result = await collectionOfDonationPayment.insertOne(details)
+        if (details.status === "success") {
+          // convert from string----------
+          const petId = new ObjectId(details.petId)
+          await createDonationCampaignCollection.updateOne(
+            { _id: petId },
+            { $inc: { totalDonation: Number(details.donationAmount) } }
+          )
+        }
+
         res.send(result)
       } catch (err) {
         res.status(500).send({ error: err.message })
