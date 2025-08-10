@@ -217,6 +217,18 @@ async function run() {
       }
     })
 
+    // get donation data from collectionOfDonationPayment-------------
+    app.get("/donationPayment/:email", async (req, res) => {
+      try {
+        const email = req.params.email.toLowerCase()
+        const query={email:email}
+        
+        const result = await collectionOfDonationPayment.find(query).toArray()
+        res.send(result)
+      } catch (err) {
+        res.status(500).send({ error: err.message })
+      }
+    })
 
 
   } finally {
