@@ -217,10 +217,11 @@ async function run() {
       }
     })
 
-    // get donation data from collectionOfDonationPayment-------------
-    app.get("/donationPayment/:email", async (req, res) => {
+    // get donation data from collectionOfDonationPayment by email-------------
+    app.get("/donationPayment", async (req, res) => {
       try {
-        const email = req.params.email.toLowerCase()
+        const email = req?.query?.email?.toLowerCase()
+        console.log(email)
         const query={email:email}
         
         const result = await collectionOfDonationPayment.find(query).toArray()
