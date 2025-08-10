@@ -221,10 +221,29 @@ async function run() {
     app.get("/donationPayment", async (req, res) => {
       try {
         const email = req?.query?.email?.toLowerCase()
-        console.log(email)
+        // console.log(email)
         const query={email:email}
         
-        const result = await collectionOfDonationPayment.find(query).toArray()
+        const result = await collectionOfDonationPayment.aggregate([
+          {
+            $match:query
+          },
+          {
+            $lookup:{
+               from:"create_donation_campaign",
+               localField:"petId",
+               foreignField:"_id",
+               as:"campaignInfo"
+            }
+          },
+          {
+            $unwind:"$campaignInfo"
+          },
+          {
+            
+          }
+
+        ]).toArray()
         res.send(result)
       } catch (err) {
         res.status(500).send({ error: err.message })
