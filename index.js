@@ -229,9 +229,14 @@ async function run() {
             $match:query
           },
           {
+            $addFields:{
+              petIdObj:{$toObjectId:"$petId"}
+            }
+          },
+          {
             $lookup:{
                from:"create_donation_campaign",
-               localField:"petId",
+               localField:"petIdObj",
                foreignField:"_id",
                as:"campaignInfo"
             }
@@ -240,7 +245,25 @@ async function run() {
             $unwind:"$campaignInfo"
           },
           {
-            
+            $project:{
+                 _id:1,
+                 petId:1,
+                 donationAmount:1,
+                 status:1,
+                 donatedDate:1,
+                 "campaignInfo.petName":1,
+                 "campaignInfo.maximumDonationAmount":1,
+                 "campaignInfo.totalDonation":1,
+                 "campaignInfo.isPaused":1,
+                 "campaignInfo.petPicture":1,
+                 donatedPercentage:{
+                  $multiply:[
+                    {
+                      $divide:["$campaignInfo.totalDonation","$campaignInfo.maximumDonationAmount"]
+                    },100
+                  ]
+                 }
+            }
           }
 
         ]).toArray()
