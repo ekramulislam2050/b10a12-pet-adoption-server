@@ -151,7 +151,7 @@ async function run() {
       }
     })
 
-    // get create donation campaign with aggregate-------------
+    // get create donation campaign  data-------------
     app.get("/cdcData", async (req, res) => {
       try {
         const query = {}
@@ -175,6 +175,74 @@ async function run() {
         res.status(500).send({ err: err.message })
       }
     })
+
+
+    // get dpData and cdcData by aggregation-----------
+    app.get("/cdcDataByEmail", async (req, res) => {
+      try {
+        const email = req?.query?.email?.toLowerCase()
+        console.log(email)
+        const query = { email: email }
+        const result = await createDonationCampaignCollection.aggregate([
+          {
+            $match: query
+          },
+          {
+            $addFields: {
+              cdcId: { $toString: "$_id" }
+            }
+          },
+          {
+            $lookup: {
+              from: "donation_payment",
+              localField: 'cdcId',
+              foreignField: "petId",
+              as: "donationPaymentInfo"
+            }
+          },
+
+          {
+            $unwind: {
+              path: "$donationPaymentInfo",
+              preserveNullAndEmptyArrays: true
+            }
+          },
+
+          {
+            $group: {
+              //from createDonationCampaign-----------------
+              _id: "$_id",
+              petName: { $first: "$petName" },
+              petPicture: { $first: "$petPicture" },
+              maximumDonationAmount: { $first: "$maximumDonationAmount" },
+              // from donationPayment=>donationPaymentInfo---------
+              totalDonation: { $sum: "$donationPaymentInfo.donationAmount" },
+
+
+            }
+          },
+          {
+            $addFields: {
+              percentage: {
+                $multiply: [{
+                  $divide: [
+                    {$ifNull:["$totalDonation",0]},
+                    {$ifNull:["$maximumDonationAmount",1]}]
+                }, 100
+
+                ]
+              }
+            }
+          }
+
+
+        ]).toArray()
+        res.send(result)
+      } catch (err) {
+        res.status(500).send({ err: err.message })
+      }
+    })
+
 
     // stripe payment related API------------
     app.post("/create_payment_intent", async (req, res) => {
@@ -218,60 +286,60 @@ async function run() {
     })
 
     // get donation data from collectionOfDonationPayment by email-------------
-    app.get("/donationPayment", async (req, res) => {
-      try {
-        const email = req?.query?.email?.toLowerCase()
-        // console.log(email)
-        const query={email:email}
-        
-        const result = await collectionOfDonationPayment.aggregate([
-          {
-            $match:query
-          },
-          {
-            $addFields:{
-              petIdObj:{$toObjectId:"$petId"}
-            }
-          },
-          {
-            $lookup:{
-               from:"create_donation_campaign",
-               localField:"petIdObj",
-               foreignField:"_id",
-               as:"campaignInfo"
-            }
-          },
-          {
-            $unwind:"$campaignInfo"
-          },
-          {
-            $project:{
-                 _id:1,
-                 petId:1,
-                 donationAmount:1,
-                 status:1,
-                 donatedDate:1,
-                 "campaignInfo.petName":1,
-                 "campaignInfo.maximumDonationAmount":1,
-                 "campaignInfo.totalDonation":1,
-                 "campaignInfo.isPaused":1,
-                 "campaignInfo.petPicture":1,
-                 donatedPercentage:{
-                  $multiply:[
-                    {
-                      $divide:["$campaignInfo.totalDonation","$campaignInfo.maximumDonationAmount"]
-                    },100
-                  ]
-                 }
-            }
-          }
+    // app.get("/donationPayment", async (req, res) => {
+    //   try {
+    //     const email = req?.query?.email?.toLowerCase()
+    //     // console.log(email)
+    //     const query = { email: email }
 
-        ]).toArray()
-        res.send(result)
-      } catch (err) {
-        res.status(500).send({ error: err.message })
-      }
-    })
+    //     const result = await collectionOfDonationPayment.aggregate([
+    //       {
+    //         $match: query
+    //       },
+    //       {
+    //         $addFields: {
+    //           petIdObj: { $toObjectId: "$petId" }
+    //         }
+    //       },
+    //       {
+    //         $lookup: {
+    //           from: "create_donation_campaign",
+    //           localField: "petIdObj",
+    //           foreignField: "_id",
+    //           as: "campaignInfo"
+    //         }
+    //       },
+    //       {
+    //         $unwind: "$campaignInfo"
+    //       },
+    //       {
+    //         $project: {
+    //           _id: 1,
+    //           petId: 1,
+    //           donationAmount: 1,
+    //           status: 1,
+    //           donatedDate: 1,
+    //           "campaignInfo.petName": 1,
+    //           "campaignInfo.maximumDonationAmount": 1,
+    //           "campaignInfo.totalDonation": 1,
+    //           "campaignInfo.isPaused": 1,
+    //           "campaignInfo.petPicture": 1,
+    //           donatedPercentage: {
+    //             $multiply: [
+    //               {
+    //                 $divide: ["$campaignInfo.totalDonation", "$campaignInfo.maximumDonationAmount"]
+    //               }, 100
+    //             ]
+    //           }
+    //         }
+    //       }
+
+    //     ]).toArray()
+    //     res.send(result)
+    //   } catch (err) {
+    //     res.status(500).send({ error: err.message })
+    //   }
+    // })
 
 
   } finally {
