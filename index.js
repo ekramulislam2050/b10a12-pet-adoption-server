@@ -176,6 +176,30 @@ async function run() {
       }
     })
 
+    // patch related API----------------
+    app.patch("/cdcData/:id",async(req,res)=>{
+          try{
+            const updatedData=req.body
+             const id = req.params.id
+             const filter={_id : new ObjectId(id)}
+             const updateDoc={
+              $set:{
+
+                petPicture:updatedData.petPicture,
+                maximumDonationAmount:updatedData.maximumDonationAmount,
+                lastDateOfDonation:updatedData.lastDateOfDonation,
+                shortDescription:updatedData.shortDescription,
+                longDescription:updatedData.longDescription,
+                petName:updatedData.petName,
+                email:updatedData.email
+              }
+             }
+             const result=await createDonationCampaignCollection.updateOne(filter,updateDoc) 
+             res.send(result)
+          }catch(err){
+               res.status(500).send({err:err.message})
+          }
+    })
 
     // get dpData and cdcData by aggregation-----------
     app.get("/cdcDataByEmail", async (req, res) => {
@@ -215,6 +239,10 @@ async function run() {
               petName: { $first: "$petName" },
               petPicture: { $first: "$petPicture" },
               maximumDonationAmount: { $first: "$maximumDonationAmount" },
+              email: { $first: "$email" },
+              lastDateOfDonation:{$first:"$lastDateOfDonation"},
+               shortDescription:{$first:"$shortDescription"},
+                longDescription:{$first:"$longDescription"},  
               // from donationPayment=>donationPaymentInfo---------
               totalDonation: { $sum: "$donationPaymentInfo.donationAmount" },
 
@@ -226,8 +254,8 @@ async function run() {
               percentage: {
                 $multiply: [{
                   $divide: [
-                    {$ifNull:["$totalDonation",0]},
-                    {$ifNull:["$maximumDonationAmount",1]}]
+                    { $ifNull: ["$totalDonation", 0] },
+                    { $ifNull: ["$maximumDonationAmount", 1] }]
                 }, 100
 
                 ]
@@ -286,60 +314,17 @@ async function run() {
     })
 
     // get donation data from collectionOfDonationPayment by email-------------
-    // app.get("/donationPayment", async (req, res) => {
-    //   try {
-    //     const email = req?.query?.email?.toLowerCase()
-    //     // console.log(email)
-    //     const query = { email: email }
-
-    //     const result = await collectionOfDonationPayment.aggregate([
-    //       {
-    //         $match: query
-    //       },
-    //       {
-    //         $addFields: {
-    //           petIdObj: { $toObjectId: "$petId" }
-    //         }
-    //       },
-    //       {
-    //         $lookup: {
-    //           from: "create_donation_campaign",
-    //           localField: "petIdObj",
-    //           foreignField: "_id",
-    //           as: "campaignInfo"
-    //         }
-    //       },
-    //       {
-    //         $unwind: "$campaignInfo"
-    //       },
-    //       {
-    //         $project: {
-    //           _id: 1,
-    //           petId: 1,
-    //           donationAmount: 1,
-    //           status: 1,
-    //           donatedDate: 1,
-    //           "campaignInfo.petName": 1,
-    //           "campaignInfo.maximumDonationAmount": 1,
-    //           "campaignInfo.totalDonation": 1,
-    //           "campaignInfo.isPaused": 1,
-    //           "campaignInfo.petPicture": 1,
-    //           donatedPercentage: {
-    //             $multiply: [
-    //               {
-    //                 $divide: ["$campaignInfo.totalDonation", "$campaignInfo.maximumDonationAmount"]
-    //               }, 100
-    //             ]
-    //           }
-    //         }
-    //       }
-
-    //     ]).toArray()
-    //     res.send(result)
-    //   } catch (err) {
-    //     res.status(500).send({ error: err.message })
-    //   }
-    // })
+    app.get("/donationPayment/:id", async (req, res) => {
+      try {
+        const id = req.params.id
+        //  console.log(typeof(id))
+        const query = { petId: id }
+        const result = await collectionOfDonationPayment.find(query).toArray()
+        res.send(result)
+      } catch (err) {
+        res.status(500).send({ error: err.message })
+      }
+    })
 
 
   } finally {
