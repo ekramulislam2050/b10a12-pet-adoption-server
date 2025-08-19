@@ -143,7 +143,11 @@ async function run() {
     //  post create donation campaign data----------------
     app.post("/createDonationCampaign", async (req, res) => {
       try {
-        const createDonationCampaign = req.body
+        const createDonationCampaign = {
+          ...req.body,
+          // default status------------
+          status: "Active"
+        }
         const result = await createDonationCampaignCollection.insertOne(createDonationCampaign)
         res.send(result)
       } catch (err) {
@@ -177,28 +181,42 @@ async function run() {
     })
 
     // patch related API----------------
-    app.patch("/cdcData/:id",async(req,res)=>{
-          try{
-            const updatedData=req.body
-             const id = req.params.id
-             const filter={_id : new ObjectId(id)}
-             const updateDoc={
-              $set:{
+    app.patch("/cdcData/:id", async (req, res) => {
+      try {
+        const updatedData = req.body
+        const id = req.params.id
+        const filter = { _id: new ObjectId(id) }
+        const updateDoc = {
+          $set: {
 
-                petPicture:updatedData.petPicture,
-                maximumDonationAmount:updatedData.maximumDonationAmount,
-                lastDateOfDonation:updatedData.lastDateOfDonation,
-                shortDescription:updatedData.shortDescription,
-                longDescription:updatedData.longDescription,
-                petName:updatedData.petName,
-                email:updatedData.email
-              }
-             }
-             const result=await createDonationCampaignCollection.updateOne(filter,updateDoc) 
-             res.send(result)
-          }catch(err){
-               res.status(500).send({err:err.message})
+            petPicture: updatedData.petPicture,
+            maximumDonationAmount: updatedData.maximumDonationAmount,
+            lastDateOfDonation: updatedData.lastDateOfDonation,
+            shortDescription: updatedData.shortDescription,
+            longDescription: updatedData.longDescription,
+            petName: updatedData.petName,
+            email: updatedData.email
           }
+        }
+        const result = await createDonationCampaignCollection.updateOne(filter, updateDoc)
+        res.send(result)
+      } catch (err) {
+        res.status(500).send({ err: err.message })
+      }
+    })
+
+    // patch by status-----------
+    app.patch("/cdcData/:id/status", async (req, res) => {
+      try {
+        const id = req.params.id
+        const filter = { _id: new ObjectId(id) }
+        const { status } = req.body
+        const updateDoc = { $set: { status } }
+        const result = await createDonationCampaignCollection.updateOne(filter, updateDoc)
+        res.send(result)
+      } catch (err) {
+        res.status(500).send({ err: err.message })
+      }
     })
 
     // get dpData and cdcData by aggregation-----------
@@ -240,9 +258,10 @@ async function run() {
               petPicture: { $first: "$petPicture" },
               maximumDonationAmount: { $first: "$maximumDonationAmount" },
               email: { $first: "$email" },
-              lastDateOfDonation:{$first:"$lastDateOfDonation"},
-               shortDescription:{$first:"$shortDescription"},
-                longDescription:{$first:"$longDescription"},  
+              lastDateOfDonation: { $first: "$lastDateOfDonation" },
+              shortDescription: { $first: "$shortDescription" },
+              longDescription: { $first: "$longDescription" },
+              status: { $first: "$status" },
               // from donationPayment=>donationPaymentInfo---------
               totalDonation: { $sum: "$donationPaymentInfo.donationAmount" },
 
