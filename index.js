@@ -88,6 +88,17 @@ async function run() {
       }
     })
 
+    //  post all data----------------
+    app.post("/allPet", async (req, res) => {
+      try {
+        const  allPet  = req.body
+        const result = await collectionsOfPets.insertOne(allPet)
+        res.send(result)
+      } catch (err) {
+        res.status(500).send({ err: err.message })
+      }
+    })
+
     // allData -----------------
     app.get("/allPet", async (req, res) => {
       try {
