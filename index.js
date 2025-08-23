@@ -97,7 +97,7 @@ async function run() {
           adopted:false,
           
         }
-        console.log("allPet",allPet)
+        // console.log("allPet",allPet)
         const result = await collectionsOfPets.insertOne(allPet)
         res.send(result)
       } catch (err) {
