@@ -91,7 +91,13 @@ async function run() {
     //  post all data----------------
     app.post("/allPet", async (req, res) => {
       try {
-        const  allPet  = req.body
+        const allPet = {
+          ...req.body,
+          //  default value--------
+          adopted:false,
+          
+        }
+        console.log("allPet",allPet)
         const result = await collectionsOfPets.insertOne(allPet)
         res.send(result)
       } catch (err) {
