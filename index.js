@@ -94,8 +94,8 @@ async function run() {
         const allPet = {
           ...req.body,
           //  default value--------
-          adopted:false,
-          
+          adopted: false,
+
         }
         // console.log("allPet",allPet)
         const result = await collectionsOfPets.insertOne(allPet)
@@ -133,6 +133,13 @@ async function run() {
       try {
         const adoptPet = req.body
         const result = await collectionOfAdoptPets.insertOne(adoptPet)
+
+        // update adopt:value to collectionOfPets-------
+        const petId = adoptPet.petId
+        await collectionsOfPets.updateOne(
+          { _id: new ObjectId(petId) },
+          { $set: { adopted: true } }
+        )
         res.send(result)
       } catch (err) {
         res.status(500).send({ err: err.message })
