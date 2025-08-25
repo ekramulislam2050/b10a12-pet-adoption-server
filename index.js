@@ -115,6 +115,21 @@ async function run() {
       }
     })
 
+    // get specific data from allData by email--------
+    app.get("/allDataByEmail", async (req, res) => {
+      try {
+        const email = req?.query?.email?.toLowerCase()
+        if(!email){
+          return res.status(400).send({error:"Email is required"})
+        }
+        const query = { email: email }
+        const result = await collectionsOfPets.find(query).toArray()
+        res.send(result)
+      } catch (err) {
+        res.status(500).send({ error: err.message })
+      }
+    })
+
     // specific data-------------
     app.get("/allPet/:id", async (req, res) => {
 
