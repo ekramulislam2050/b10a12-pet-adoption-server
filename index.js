@@ -159,6 +159,18 @@ async function run() {
          }
     })
 
+    // delete specific data by id----------
+    app.delete("/allPet/:id",async(req,res)=>{
+       try{
+          const id =req.params.id
+          const filter={_id:new ObjectId(id)}
+          const result=await collectionsOfPets.deleteOne(filter)
+          res.send(result)
+       }catch(err){
+         res.status(500).send({error:err.message})
+       }
+    })
+
     // post adopt data----------
     app.post("/adoptPets", async (req, res) => {
       try {
