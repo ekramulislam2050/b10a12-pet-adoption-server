@@ -143,6 +143,22 @@ async function run() {
       }
     })
 
+    // patch by id in allPet
+    app.patch("/allPet/:id",async(req,res)=>{
+         try{
+           const id = req.params.id
+          const updatedData=req.body
+          const filter={_id:new ObjectId(id)}
+          const updateDoc={
+            $set:updatedData
+          }
+          const result=await collectionsOfPets.updateOne(filter,updateDoc)
+          res.send(result)
+         }catch(err){
+          res.status(500).send({error:err.message})
+         }
+    })
+
     // post adopt data----------
     app.post("/adoptPets", async (req, res) => {
       try {
