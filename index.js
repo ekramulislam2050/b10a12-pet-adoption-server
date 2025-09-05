@@ -171,6 +171,22 @@ async function run() {
        }
     })
 
+    // adopt status update-------
+    app.patch("/allPet/:id/status",async (req,res)=>{
+      try{
+         const id=req.params.id
+         const {adopted}=req.body
+         const filter={_id:new ObjectId(id)}
+         const updateDoc={
+          $set:{adopted}
+        }
+         const result=await collectionsOfPets.updateOne(filter,updateDoc)
+         res.send(result)
+      }catch(err){
+        res.status(500).send({error:err.message})
+      }
+    })
+
     // post adopt data----------
     app.post("/adoptPets", async (req, res) => {
       try {
