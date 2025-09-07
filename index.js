@@ -427,7 +427,18 @@ async function run() {
         res.status(500).send({ error: err.message })
       }
     })
+  
+    // donarData get by email-----------
+    app.get("/donarDataByEmail",async(req,res)=>{
+        try{
+          const email=req?.query?.email.toLowerCase()
+          const query={email:email}
+          
 
+        }catch(err){
+           res.status(500).send({error:err.message})
+        }
+    })
 
   } finally {
     // Ensures that the client will close when you finish/error
