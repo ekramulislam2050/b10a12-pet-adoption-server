@@ -119,8 +119,8 @@ async function run() {
     app.get("/allDataByEmail", async (req, res) => {
       try {
         const email = req?.query?.email?.toLowerCase()
-        if(!email){
-          return res.status(400).send({error:"Email is required"})
+        if (!email) {
+          return res.status(400).send({ error: "Email is required" })
         }
         const query = { email: email }
         const result = await collectionsOfPets.find(query).toArray()
@@ -144,46 +144,46 @@ async function run() {
     })
 
     // patch by id in allPet
-    app.patch("/allPet/:id",async(req,res)=>{
-         try{
-           const id = req.params.id
-          const updatedData=req.body
-          const filter={_id:new ObjectId(id)}
-          const updateDoc={
-            $set:updatedData
-          }
-          const result=await collectionsOfPets.updateOne(filter,updateDoc)
-          res.send(result)
-         }catch(err){
-          res.status(500).send({error:err.message})
-         }
+    app.patch("/allPet/:id", async (req, res) => {
+      try {
+        const id = req.params.id
+        const updatedData = req.body
+        const filter = { _id: new ObjectId(id) }
+        const updateDoc = {
+          $set: updatedData
+        }
+        const result = await collectionsOfPets.updateOne(filter, updateDoc)
+        res.send(result)
+      } catch (err) {
+        res.status(500).send({ error: err.message })
+      }
     })
 
     // delete specific data by id----------
-    app.delete("/allPet/:id",async(req,res)=>{
-       try{
-          const id =req.params.id
-          const filter={_id:new ObjectId(id)}
-          const result=await collectionsOfPets.deleteOne(filter)
-          res.send(result)
-       }catch(err){
-         res.status(500).send({error:err.message})
-       }
+    app.delete("/allPet/:id", async (req, res) => {
+      try {
+        const id = req.params.id
+        const filter = { _id: new ObjectId(id) }
+        const result = await collectionsOfPets.deleteOne(filter)
+        res.send(result)
+      } catch (err) {
+        res.status(500).send({ error: err.message })
+      }
     })
 
     // adopt status update-------
-    app.patch("/allPet/:id/status",async (req,res)=>{
-      try{
-         const id=req.params.id
-         const {adopted}=req.body
-         const filter={_id:new ObjectId(id)}
-         const updateDoc={
-          $set:{adopted}
+    app.patch("/allPet/:id/status", async (req, res) => {
+      try {
+        const id = req.params.id
+        const { adopted } = req.body
+        const filter = { _id: new ObjectId(id) }
+        const updateDoc = {
+          $set: { adopted }
         }
-         const result=await collectionsOfPets.updateOne(filter,updateDoc)
-         res.send(result)
-      }catch(err){
-        res.status(500).send({error:err.message})
+        const result = await collectionsOfPets.updateOne(filter, updateDoc)
+        res.send(result)
+      } catch (err) {
+        res.status(500).send({ error: err.message })
       }
     })
 
@@ -427,17 +427,66 @@ async function run() {
         res.status(500).send({ error: err.message })
       }
     })
-  
-    // donarData get by email-----------
-    app.get("/donarDataByEmail",async(req,res)=>{
-        try{
-          const email=req?.query?.email.toLowerCase()
-          const query={email:email}
-          
 
-        }catch(err){
-           res.status(500).send({error:err.message})
-        }
+    // donarData get by email-----------
+    app.get("/donarDataByEmail", verifyToken, async (req, res) => {
+      try {
+        const email = req?.query?.email.toLowerCase()
+        const query = { email: email }
+        const result = await collectionOfDonationPayment.aggregate([
+          {
+            $match: query
+          },
+          {
+            $addFields:{
+              petIdObj:{
+                $convert:{
+                   input:"$petId",
+                   to:"objectId",
+                   onError:null,
+                   onNull:null
+                }
+              }
+            }
+          }
+         ,
+
+          {
+            $lookup: {
+              from: "create_donation_campaign",
+              localField: "petIdObj",
+              foreignField: "_id",
+              as: "donatedPetInfo"
+
+            }
+          },
+          {
+            $project:{
+             
+              donationAmount:1,
+               petName:{
+                  $cond:[
+                    {$gt:[{$size:"$donatedPetInfo"},0]},
+                    {$arrayElemAt:["$donatedPetInfo.petName",0]},
+                    null
+                  ]
+               },
+               petImg:{
+                $cond:[
+                  {$gt:[{$size:"$donatedPetInfo"},0]},
+                  {$arrayElemAt:["$donatedPetInfo.petPicture",0]},
+                  null
+                ]
+               }
+            }
+          }
+          
+        ]).toArray()
+        res.send(result)
+
+      } catch (err) {
+        res.status(500).send({ error: err.message })
+      }
     })
 
   } finally {
