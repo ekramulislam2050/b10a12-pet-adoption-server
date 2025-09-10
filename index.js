@@ -428,7 +428,7 @@ async function run() {
       }
     })
 
-    // donarData get by email-----------
+    // donarData get by email with aggregation-----------
     app.get("/donarDataByEmail", verifyToken, async (req, res) => {
       try {
         const email = req?.query?.email.toLowerCase()
@@ -486,6 +486,18 @@ async function run() {
 
       } catch (err) {
         res.status(500).send({ error: err.message })
+      }
+    })
+    
+    // delete for refund------------
+    app.delete("/refund/:id",async(req,res)=>{
+      try{
+         const id = req.params.id
+         const filter={_id:new ObjectId(id)}
+         const result=await collectionOfDonationPayment.deleteOne(filter)
+         res.send(result)
+      }catch(err){
+        res.status(500).send({error:err.message})
       }
     })
 
