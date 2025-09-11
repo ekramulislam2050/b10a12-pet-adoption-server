@@ -204,6 +204,18 @@ async function run() {
         res.status(500).send({ err: err.message })
       }
     })
+    // get adopt data by owner email-----------
+    app.get("/requestedForAdoptByOwnerEmail",async(req,res)=>{
+       try{
+          const ownerEmail=req?.query?.email?.toLocaleLowerCase().trim()
+          console.log(ownerEmail)
+          const filter={ownerEmail:ownerEmail}
+          const result=await collectionOfAdoptPets.find(filter).toArray()
+          res.send(result)
+       }catch(err){
+         res.status(500).send({error:err.message})
+       }
+    })
 
     // available pets-----------
 
