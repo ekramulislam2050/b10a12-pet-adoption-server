@@ -190,31 +190,78 @@ async function run() {
     // post adopt data----------
     app.post("/adoptPets", async (req, res) => {
       try {
-        const adoptPet = req.body
+        const adoptPet = {
+          ...req.body,
+          status: "pending"
+        }
         const result = await collectionOfAdoptPets.insertOne(adoptPet)
 
-        // update adopt:value to collectionOfPets-------
-        const petId = adoptPet.petId
-        await collectionsOfPets.updateOne(
-          { _id: new ObjectId(petId) },
-          { $set: { adopted: true } }
-        )
+
         res.send(result)
       } catch (err) {
         res.status(500).send({ err: err.message })
       }
     })
-    // get adopt data by owner email-----------
-    app.get("/requestedForAdoptByOwnerEmail",async(req,res)=>{
+
+    // update adopt status by accept button-------
+    app.patch("/adoptPets/:id/status", async (req, res) => {
+      try {
+        const id = req.params.id
+        const filter = { _id: new ObjectId(id) }
+        const updateDoc = {
+          $set: { status: "accepted" }
+        }
+        const result = await collectionOfAdoptPets.updateOne(filter, updateDoc)
+        const adoptPet = await collectionOfAdoptPets.findOne(filter)
+        // update adopt:value to collectionOfPets-------
+        if (adoptPet.petId) {
+          const petId = adoptPet.petId
+          await collectionsOfPets.updateOne(
+            { _id: new ObjectId(petId) },
+            { $set: { adopted: true } }
+          )
+        }
+        res.send(result)
+      } catch (err) {
+        res.status(500).send({ error: err.message })
+      }
+    })
+
+    // reject adopt status by reject button-------------
+    app.patch("/adoptPets/:id/reject",async(req,res)=>{
        try{
-          const ownerEmail=req?.query?.email?.toLocaleLowerCase().trim()
-          console.log(ownerEmail)
-          const filter={ownerEmail:ownerEmail}
-          const result=await collectionOfAdoptPets.find(filter).toArray()
-          res.send(result)
+           const id = req.params.id
+           const filter= {_id:new ObjectId(id)}
+           const updateDoc={
+            $set:{status:"rejected"}
+           }
+           const result = await collectionOfAdoptPets.updateOne(filter,updateDoc)
+          //  update adopt:value to collectionOfPet----------
+           const adoptPet= await collectionOfAdoptPets.findOne(filter)
+           if(adoptPet?.petId){
+             const petId=adoptPet?.petId
+             await collectionsOfPets.updateOne(
+                {_id:new ObjectId(petId)},
+                {$set:{adopted:false }}
+             )
+           }
+           res.send(result)
        }catch(err){
          res.status(500).send({error:err.message})
        }
+    })
+
+    // get adopt data by owner email-----------
+    app.get("/requestedForAdoptByOwnerEmail", async (req, res) => {
+      try {
+        const ownerEmail = req?.query?.email?.toLocaleLowerCase().trim()
+        console.log(ownerEmail)
+        const filter = { ownerEmail: ownerEmail }
+        const result = await collectionOfAdoptPets.find(filter).toArray()
+        res.send(result)
+      } catch (err) {
+        res.status(500).send({ error: err.message })
+      }
     })
 
     // available pets-----------
@@ -450,18 +497,18 @@ async function run() {
             $match: query
           },
           {
-            $addFields:{
-              petIdObj:{
-                $convert:{
-                   input:"$petId",
-                   to:"objectId",
-                   onError:null,
-                   onNull:null
+            $addFields: {
+              petIdObj: {
+                $convert: {
+                  input: "$petId",
+                  to: "objectId",
+                  onError: null,
+                  onNull: null
                 }
               }
             }
           }
-         ,
+          ,
 
           {
             $lookup: {
@@ -473,26 +520,26 @@ async function run() {
             }
           },
           {
-            $project:{
-             
-              donationAmount:1,
-               petName:{
-                  $cond:[
-                    {$gt:[{$size:"$donatedPetInfo"},0]},
-                    {$arrayElemAt:["$donatedPetInfo.petName",0]},
-                    null
-                  ]
-               },
-               petImg:{
-                $cond:[
-                  {$gt:[{$size:"$donatedPetInfo"},0]},
-                  {$arrayElemAt:["$donatedPetInfo.petPicture",0]},
+            $project: {
+
+              donationAmount: 1,
+              petName: {
+                $cond: [
+                  { $gt: [{ $size: "$donatedPetInfo" }, 0] },
+                  { $arrayElemAt: ["$donatedPetInfo.petName", 0] },
                   null
                 ]
-               }
+              },
+              petImg: {
+                $cond: [
+                  { $gt: [{ $size: "$donatedPetInfo" }, 0] },
+                  { $arrayElemAt: ["$donatedPetInfo.petPicture", 0] },
+                  null
+                ]
+              }
             }
           }
-          
+
         ]).toArray()
         res.send(result)
 
@@ -500,16 +547,16 @@ async function run() {
         res.status(500).send({ error: err.message })
       }
     })
-    
+
     // delete for refund------------
-    app.delete("/refund/:id",async(req,res)=>{
-      try{
-         const id = req.params.id
-         const filter={_id:new ObjectId(id)}
-         const result=await collectionOfDonationPayment.deleteOne(filter)
-         res.send(result)
-      }catch(err){
-        res.status(500).send({error:err.message})
+    app.delete("/refund/:id", async (req, res) => {
+      try {
+        const id = req.params.id
+        const filter = { _id: new ObjectId(id) }
+        const result = await collectionOfDonationPayment.deleteOne(filter)
+        res.send(result)
+      } catch (err) {
+        res.status(500).send({ error: err.message })
       }
     })
 
