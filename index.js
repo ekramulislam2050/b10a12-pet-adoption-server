@@ -365,7 +365,9 @@ async function run() {
     app.get("/cdcDataByEmail", async (req, res) => {
       try {
         const email = req?.query?.email?.toLowerCase()
-        console.log(email)
+        if(!email){
+          return res.status(400).send({error:"email is required"})
+        }
         const query = { email: email }
         const result = await createDonationCampaignCollection.aggregate([
           {
@@ -491,6 +493,9 @@ async function run() {
     app.get("/donarDataByEmail", verifyToken, async (req, res) => {
       try {
         const email = req?.query?.email.toLowerCase()
+        if(!email){
+         return res.status(400).send({error:"email is require"})
+        }
         const query = { email: email }
         const result = await collectionOfDonationPayment.aggregate([
           {
