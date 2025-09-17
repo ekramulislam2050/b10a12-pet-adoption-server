@@ -67,7 +67,7 @@ async function run() {
     })
 
     // middleware very admin------------
-      const veryAdmin=async(req,res,next)=>{
+      const verifyAdmin=async(req,res,next)=>{
             try{
               const requesterEmail=req.decoded?.email
               if(!requesterEmail){
