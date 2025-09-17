@@ -66,6 +66,23 @@ async function run() {
       res.send({ token })
     })
 
+    // middleware very admin------------
+      const veryAdmin=async(req,res,next)=>{
+            try{
+              const requesterEmail=req.decoded?.email
+              if(!requesterEmail){
+                return res.status(401).send({message:"Unauthorize"})
+              }
+              const requester=await collectionOfUser.findOne({email:requesterEmail})
+              if(requester.role!=="admin"){
+                 return res.status(403).send({message:"required admin role"})
+              }
+              next()
+            }catch(err){
+              next(err)
+            }
+      }
+
     //  get recommended donation data-----------
     app.get("/recommended_donation", async (req, res) => {
       try {
