@@ -40,6 +40,7 @@ async function run() {
       ("create_donation_campaign")
     const collectionOfDonationPayment = db.collection("donation_payment")
     const collectionOfRecommendedDonation = db.collection("recommended_donation")
+    const collectionOfLoginUser=db.collection("loginUsers")
 
 
     // verifyToken--------------------
@@ -82,6 +83,25 @@ async function run() {
               next(err)
             }
       }
+
+      // post login users----------
+      app.post("/loginUsers",async(req,res)=>{
+        try{
+            const loginUsers=req.body
+            console.log("login user=",loginUsers)
+            if(!loginUsers.email){
+              return res.status(400).send({error:"email is required"})
+            }
+            const existingUser= await collectionOfLoginUser.findOne({email:loginUsers.email})
+            if(existingUser){
+              return res.send({message:"user already exist"})
+            }
+            const result=await collectionOfLoginUser.insertOne(loginUsers)
+            res.send(result)
+        }catch(err){
+          res.status(500).send({error:err.message})
+        }
+      })
 
     //  get recommended donation data-----------
     app.get("/recommended_donation", async (req, res) => {
