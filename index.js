@@ -113,6 +113,38 @@ async function run() {
              }
       })
 
+      // for admin make updated loginUser role------------
+      app.patch("/makeAdmin/:id",async(req,res)=>{
+          try{
+  const id = req.params.id
+          const updatedData = req.body
+          const filter={_id:new ObjectId(id)}
+          const updateDoc={
+            $set:updatedData
+          }
+          const result = await collectionOfLoginUser.updateOne(filter,updateDoc)
+          res.send(result)
+          }catch(err){
+            res.status(500).send({error:err.message})
+          }
+      })
+
+      // for ban admin updated loginUser role----------
+      app.patch("/banAdmin/:id",async(req,res)=>{
+           try{
+              const id = req.params.id
+            const updatedData=req.body
+            const filter={_id:new ObjectId(id)}
+            const updateDoc={
+              $set:updatedData
+            }
+            const result = await collectionOfLoginUser.updateOne(updateDoc,filter)
+            res.send(result)
+           }catch(err){
+            res.status(500).send({error:err.message})
+           }
+      })
+
     //  get recommended donation data-----------
     app.get("/recommended_donation", async (req, res) => {
       try {
@@ -190,7 +222,7 @@ async function run() {
       }
     })
 
-    // patch by id in allPet
+    // patch by id in allPet-----------
     app.patch("/allPet/:id", async (req, res) => {
       try {
         const id = req.params.id
