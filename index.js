@@ -103,6 +103,16 @@ async function run() {
         }
       })
 
+      // get login user----------------
+      app.get("/loginUsers",async(req,res)=>{
+             try{
+                const loginUsers=await collectionOfLoginUser.find({}).toArray()
+                res.send(loginUsers)
+             }catch(err){
+              res.status(500).send({error:err.message})
+             }
+      })
+
     //  get recommended donation data-----------
     app.get("/recommended_donation", async (req, res) => {
       try {
