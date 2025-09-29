@@ -40,7 +40,7 @@ async function run() {
       ("create_donation_campaign")
     const collectionOfDonationPayment = db.collection("donation_payment")
     const collectionOfRecommendedDonation = db.collection("recommended_donation")
-    const collectionOfLoginUser=db.collection("loginUsers")
+    const collectionOfLoginUser = db.collection("loginUsers")
 
 
     // verifyToken--------------------
@@ -68,82 +68,82 @@ async function run() {
     })
 
     // middleware very admin------------
-      const verifyAdmin=async(req,res,next)=>{
-            try{
-              const requesterEmail=req.decoded?.email
-              if(!requesterEmail){
-                return res.status(401).send({message:"Unauthorize"})
-              }
-              const requester=await collectionOfUser.findOne({email:requesterEmail})
-              if(requester.role!=="admin"){
-                 return res.status(403).send({message:"required admin role"})
-              }
-              next()
-            }catch(err){
-              next(err)
-            }
-      }
-
-      // post login users----------
-      app.post("/loginUsers",async(req,res)=>{
-        try{
-            const loginUsers=req.body
-            console.log("login user=",loginUsers)
-            if(!loginUsers.email){
-              return res.status(400).send({error:"email is required"})
-            }
-            const existingUser= await collectionOfLoginUser.findOne({email:loginUsers.email})
-            if(existingUser){
-              return res.send({message:"user already exist"})
-            }
-            const result=await collectionOfLoginUser.insertOne(loginUsers)
-            res.send(result)
-        }catch(err){
-          res.status(500).send({error:err.message})
+    const verifyAdmin = async (req, res, next) => {
+      try {
+        const requesterEmail = req.decoded?.email
+        if (!requesterEmail) {
+          return res.status(401).send({ message: "Unauthorize" })
         }
-      })
+        const requester = await collectionOfUser.findOne({ email: requesterEmail })
+        if (requester.role !== "admin") {
+          return res.status(403).send({ message: "required admin role" })
+        }
+        next()
+      } catch (err) {
+        next(err)
+      }
+    }
 
-      // get login user----------------
-      app.get("/loginUsers",async(req,res)=>{
-             try{
-                const loginUsers=await collectionOfLoginUser.find({}).toArray()
-                res.send(loginUsers)
-             }catch(err){
-              res.status(500).send({error:err.message})
-             }
-      })
+    // post login users----------
+    app.post("/loginUsers", async (req, res) => {
+      try {
+        const loginUsers = req.body
+        console.log("login user=", loginUsers)
+        if (!loginUsers.email) {
+          return res.status(400).send({ error: "email is required" })
+        }
+        const existingUser = await collectionOfLoginUser.findOne({ email: loginUsers.email })
+        if (existingUser) {
+          return res.send({ message: "user already exist" })
+        }
+        const result = await collectionOfLoginUser.insertOne(loginUsers)
+        res.send(result)
+      } catch (err) {
+        res.status(500).send({ error: err.message })
+      }
+    })
 
-      // for admin make updated loginUser role------------
-      app.patch("/makeAdmin/:id",async(req,res)=>{
-          try{
-  const id = req.params.id
-          const updatedData = req.body
-          const filter={_id:new ObjectId(id)}
-          const updateDoc={
-            $set:updatedData
-          }
-          const result = await collectionOfLoginUser.updateOne(filter,updateDoc)
-          res.send(result)
-          }catch(err){
-            res.status(500).send({error:err.message})
-          }
-      })
+    // get login user----------------
+    app.get("/loginUsers", async (req, res) => {
+      try {
+        const loginUsers = await collectionOfLoginUser.find({}).toArray()
+        res.send(loginUsers)
+      } catch (err) {
+        res.status(500).send({ error: err.message })
+      }
+    })
 
-      // for ban admin updated loginUser role----------
-      app.patch("/banAdmin/:id",async(req,res)=>{
-           try{
-              const id = req.params.id
-            const updatedData=req.body
-            const filter={_id:new ObjectId(id)}
-            const updateDoc={
-              $set:updatedData
-            }
-            const result = await collectionOfLoginUser.updateOne(updateDoc,filter)
-            res.send(result)
-           }catch(err){
-            res.status(500).send({error:err.message})
-           }
-      })
+    // for admin make updated loginUser role------------
+    app.patch("/makeAdmin/:id", async (req, res) => {
+      try {
+        const id = req.params.id
+        const updatedData = req.body
+        const filter = { _id: new ObjectId(id) }
+        const updateDoc = {
+          $set: updatedData
+        }
+        const result = await collectionOfLoginUser.updateOne(filter, updateDoc)
+        res.send(result)
+      } catch (err) {
+        res.status(500).send({ error: err.message })
+      }
+    })
+
+    // for ban admin updated loginUser role----------
+    app.patch("/banAdmin/:id", async (req, res) => {
+      try {
+        const id = req.params.id
+        const updatedData = req.body
+        const filter = { _id: new ObjectId(id) }
+        const updateDoc = {
+          $set: updatedData
+        }
+        const result = await collectionOfLoginUser.updateOne(filter,updateDoc )
+        res.send(result)
+      } catch (err) {
+        res.status(500).send({ error: err.message })
+      }
+    })
 
     //  get recommended donation data-----------
     app.get("/recommended_donation", async (req, res) => {
@@ -307,27 +307,27 @@ async function run() {
     })
 
     // reject adopt status by reject button-------------
-    app.patch("/adoptPets/:id/reject",async(req,res)=>{
-       try{
-           const id = req.params.id
-           const filter= {_id:new ObjectId(id)}
-           const updateDoc={
-            $set:{status:"rejected"}
-           }
-           const result = await collectionOfAdoptPets.updateOne(filter,updateDoc)
-          //  update adopt:value to collectionOfPet----------
-           const adoptPet= await collectionOfAdoptPets.findOne(filter)
-           if(adoptPet?.petId){
-             const petId=adoptPet?.petId
-             await collectionsOfPets.updateOne(
-                {_id:new ObjectId(petId)},
-                {$set:{adopted:false }}
-             )
-           }
-           res.send(result)
-       }catch(err){
-         res.status(500).send({error:err.message})
-       }
+    app.patch("/adoptPets/:id/reject", async (req, res) => {
+      try {
+        const id = req.params.id
+        const filter = { _id: new ObjectId(id) }
+        const updateDoc = {
+          $set: { status: "rejected" }
+        }
+        const result = await collectionOfAdoptPets.updateOne(filter, updateDoc)
+        //  update adopt:value to collectionOfPet----------
+        const adoptPet = await collectionOfAdoptPets.findOne(filter)
+        if (adoptPet?.petId) {
+          const petId = adoptPet?.petId
+          await collectionsOfPets.updateOne(
+            { _id: new ObjectId(petId) },
+            { $set: { adopted: false } }
+          )
+        }
+        res.send(result)
+      } catch (err) {
+        res.status(500).send({ error: err.message })
+      }
     })
 
     // get adopt data by owner email-----------
@@ -444,8 +444,8 @@ async function run() {
     app.get("/cdcDataByEmail", async (req, res) => {
       try {
         const email = req?.query?.email?.toLowerCase()
-        if(!email){
-          return res.status(400).send({error:"email is required"})
+        if (!email) {
+          return res.status(400).send({ error: "email is required" })
         }
         const query = { email: email }
         const result = await createDonationCampaignCollection.aggregate([
@@ -572,8 +572,8 @@ async function run() {
     app.get("/donarDataByEmail", verifyToken, async (req, res) => {
       try {
         const email = req?.query?.email.toLowerCase()
-        if(!email){
-         return res.status(400).send({error:"email is require"})
+        if (!email) {
+          return res.status(400).send({ error: "email is require" })
         }
         const query = { email: email }
         const result = await collectionOfDonationPayment.aggregate([
