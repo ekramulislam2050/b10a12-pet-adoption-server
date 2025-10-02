@@ -138,7 +138,7 @@ async function run() {
         const updateDoc = {
           $set: updatedData
         }
-        const result = await collectionOfLoginUser.updateOne(filter,updateDoc )
+        const result = await collectionOfLoginUser.updateOne(filter, updateDoc)
         res.send(result)
       } catch (err) {
         res.status(500).send({ error: err.message })
@@ -191,6 +191,45 @@ async function run() {
         res.send(pets)
       } catch (error) {
         res.status(500).send({ error: error.message })
+      }
+    })
+
+    // get pets and owners data by aggregation------------
+    app.get("/allPetsAndOwnersForAdmin", async (req, res) => {
+      try {
+        const petWithOwner = await collectionsOfPets.aggregate([
+          {
+            $lookup: {
+              from: "loginUsers",
+              foreignField: "email",
+              localField: "email",
+              as: "petInfoWithOwner"
+            }
+          },
+          {
+            $unwind: "$petInfoWithOwner"
+          },
+          {
+            $project: {
+              _id: 1,
+              name: 1,
+              category: 1,
+              age: 1,
+              location: 1,
+              image: 1,
+              adopted: 1,
+              postedDate: 1,
+              shortDescription: 1,
+              email: 1,
+              "petInfoWithOwner.name": 1,
+              "petInfoWithOwner.image": 1,
+              "petInfoWithOwner.role": 1
+            }
+          }
+        ]).toArray()
+        res.send(petWithOwner)
+      } catch (err) {
+        res.status(500).send({ error: err.message })
       }
     })
 
