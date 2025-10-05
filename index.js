@@ -184,6 +184,22 @@ async function run() {
       }
     })
 
+    // update allPet by admin------------
+     app.patch("/updateAllPetByAdmin/:id",async(req,res)=>{
+            try{
+                const id = req.params.id
+                const updatedData=req.body
+                 const query={_id:new ObjectId(id)}
+                 const updatedDoc={
+                  $set:updatedData
+                 }
+                 const result=await collectionsOfPets.updateOne(query,updatedDoc)
+                 res.send(result)
+            }catch(err){
+              res.status(500).send({error:err.message})
+            }
+     })
+
     // allData -----------------
     app.get("/allPet", async (req, res) => {
       try {
