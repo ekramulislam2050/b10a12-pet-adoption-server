@@ -220,6 +220,7 @@ async function run() {
               adopted: 1,
               postedDate: 1,
               shortDescription: 1,
+              longDescription: 1,
               email: 1,
               "petInfoWithOwner.name": 1,
               "petInfoWithOwner.image": 1,
