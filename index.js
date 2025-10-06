@@ -199,6 +199,34 @@ async function run() {
               res.status(500).send({error:err.message})
             }
      })
+    
+    //  delete pet from allPet by admin-------------
+    app.delete("/deletePetByAdmin/:id",async(req,res)=>{
+          try{
+              const id = req.params.id
+              const query={_id:new ObjectId(id)}
+              const result = await collectionsOfPets.deleteOne(query)
+              res.send(result)
+          }catch(err){
+            res.status(500).send({error:err.message})
+          }
+    })
+  
+    // status update by admin----------
+    app.patch("/statusUpdateByAdmin/:id",async(req,res)=>{
+         try{
+              const id = req.params.id
+              const updatedStatus=req.body
+              const query={_id:new ObjectId(id)}
+              const updatedDoc={
+                $set:updatedStatus
+              }
+              const result = await collectionsOfPets.updateOne(query,updatedDoc)
+              res.send(result)
+         }catch(err){
+            res.status(500).send({error:err.message})
+         }
+    })
 
     // allData -----------------
     app.get("/allPet", async (req, res) => {
