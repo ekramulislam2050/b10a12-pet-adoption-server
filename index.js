@@ -54,7 +54,8 @@ async function run() {
         if (err) {
           return res.status(403).send("forbidden access")
         }
-        req.email = decoded;
+        req.email = decoded.email;     
+        req.decoded = decoded;
         next()
       })
     }
@@ -70,11 +71,11 @@ async function run() {
     // middleware very admin------------
     const verifyAdmin = async (req, res, next) => {
       try {
-        const requesterEmail = req.decoded?.email
+        const requesterEmail = req.email
         if (!requesterEmail) {
           return res.status(401).send({ message: "Unauthorize" })
         }
-        const requester = await collectionOfUser.findOne({ email: requesterEmail })
+        const requester = await collectionOfLoginUser.findOne({ email: requesterEmail })
         if (requester.role !== "admin") {
           return res.status(403).send({ message: "required admin role" })
         }
@@ -88,7 +89,7 @@ async function run() {
     app.post("/loginUsers", async (req, res) => {
       try {
         const loginUsers = req.body
-    
+
         if (!loginUsers.email) {
           return res.status(400).send({ error: "email is required" })
         }
@@ -104,8 +105,9 @@ async function run() {
     })
 
     // get login user----------------
-    app.get("/loginUsers", async (req, res) => {
+    app.get("/loginUsers", verifyToken, async (req, res) => {
       try {
+        console.log("req.email in route:", req.email);
         const loginUsers = await collectionOfLoginUser.find({}).toArray()
         res.send(loginUsers)
       } catch (err) {
@@ -114,7 +116,7 @@ async function run() {
     })
 
     // for admin make updated loginUser role------------
-    app.patch("/makeAdmin/:id", async (req, res) => {
+    app.patch("/makeAdmin/:id", verifyToken, verifyAdmin, async (req, res) => {
       try {
         const id = req.params.id
         const updatedData = req.body
@@ -130,7 +132,7 @@ async function run() {
     })
 
     // for ban admin updated loginUser role----------
-    app.patch("/banAdmin/:id", async (req, res) => {
+    app.patch("/banAdmin/:id", verifyToken, verifyAdmin, async (req, res) => {
       try {
         const id = req.params.id
         const updatedData = req.body
@@ -146,7 +148,7 @@ async function run() {
     })
 
     //  get recommended donation data-----------
-    app.get("/recommended_donation", async (req, res) => {
+    app.get("/recommended_donation", verifyToken, async (req, res) => {
       try {
         const result = await collectionOfRecommendedDonation.find({}).toArray();
         res.send(result)
@@ -156,7 +158,7 @@ async function run() {
     })
 
     // get specific recommended donation data by id----------
-    app.get("/recommended_donation/:id", async (req, res) => {
+    app.get("/recommended_donation/:id", verifyToken, async (req, res) => {
       try {
         const id = req.params.id
         const filter = { _id: new ObjectId(id) }
@@ -168,7 +170,7 @@ async function run() {
     })
 
     //  post all data----------------
-    app.post("/allPet", async (req, res) => {
+    app.post("/allPet", verifyToken, async (req, res) => {
       try {
         const allPet = {
           ...req.body,
@@ -185,7 +187,7 @@ async function run() {
     })
 
     // update allPet by admin------------
-    app.patch("/updateAllPetByAdmin/:id", async (req, res) => {
+    app.patch("/updateAllPetByAdmin/:id", verifyToken, verifyAdmin, async (req, res) => {
       try {
         const id = req.params.id
         const updatedData = req.body
@@ -201,7 +203,7 @@ async function run() {
     })
 
     //  delete pet from allPet by admin-------------
-    app.delete("/deletePetByAdmin/:id", async (req, res) => {
+    app.delete("/deletePetByAdmin/:id", verifyToken, verifyAdmin, async (req, res) => {
       try {
         const id = req.params.id
         const query = { _id: new ObjectId(id) }
@@ -213,7 +215,7 @@ async function run() {
     })
 
     // status update by admin----------
-    app.patch("/statusUpdateByAdmin/:id", async (req, res) => {
+    app.patch("/statusUpdateByAdmin/:id", verifyToken, verifyAdmin, async (req, res) => {
       try {
         const id = req.params.id
         const updatedStatus = req.body
@@ -229,7 +231,7 @@ async function run() {
     })
 
     // allData -----------------
-    app.get("/allPet", async (req, res) => {
+    app.get("/allPet", verifyToken, async (req, res) => {
       try {
         const pets = await collectionsOfPets.find({}).toArray()
         res.send(pets)
@@ -239,7 +241,7 @@ async function run() {
     })
 
     // get pets and owners data by aggregation------------
-    app.get("/allPetsAndOwnersForAdmin", async (req, res) => {
+    app.get("/allPetsAndOwnersForAdmin", verifyToken, verifyAdmin, async (req, res) => {
       try {
         const petWithOwner = await collectionsOfPets.aggregate([
           {
@@ -279,7 +281,7 @@ async function run() {
     })
 
     // get specific data from allData by email--------
-    app.get("/allDataByEmail", async (req, res) => {
+    app.get("/allDataByEmail", verifyToken, async (req, res) => {
       try {
         const email = req?.query?.email?.toLowerCase()
         if (!email) {
@@ -294,7 +296,7 @@ async function run() {
     })
 
     // specific data-------------
-    app.get("/allPet/:id", async (req, res) => {
+    app.get("/allPet/:id", verifyToken, async (req, res) => {
 
       try {
         const id = req.params.id
@@ -307,7 +309,7 @@ async function run() {
     })
 
     // patch by id in allPet-----------
-    app.patch("/allPet/:id", async (req, res) => {
+    app.patch("/allPet/:id", verifyToken, async (req, res) => {
       try {
         const id = req.params.id
         const updatedData = req.body
@@ -323,7 +325,7 @@ async function run() {
     })
 
     // delete specific data by id----------
-    app.delete("/allPet/:id", async (req, res) => {
+    app.delete("/allPet/:id", verifyToken, async (req, res) => {
       try {
         const id = req.params.id
         const filter = { _id: new ObjectId(id) }
@@ -335,7 +337,7 @@ async function run() {
     })
 
     // adopt status update-------
-    app.patch("/allPet/:id/status", async (req, res) => {
+    app.patch("/allPet/:id/status", verifyToken, async (req, res) => {
       try {
         const id = req.params.id
         const { adopted } = req.body
@@ -351,7 +353,7 @@ async function run() {
     })
 
     // post adopt data----------
-    app.post("/adoptPets", async (req, res) => {
+    app.post("/adoptPets", verifyToken, async (req, res) => {
       try {
         const adoptPet = {
           ...req.body,
@@ -367,7 +369,7 @@ async function run() {
     })
 
     // update adopt status by accept button-------
-    app.patch("/adoptPets/:id/status", async (req, res) => {
+    app.patch("/adoptPets/:id/status", verifyToken, async (req, res) => {
       try {
         const id = req.params.id
         const filter = { _id: new ObjectId(id) }
@@ -391,7 +393,7 @@ async function run() {
     })
 
     // reject adopt status by reject button-------------
-    app.patch("/adoptPets/:id/reject", async (req, res) => {
+    app.patch("/adoptPets/:id/reject", verifyToken, async (req, res) => {
       try {
         const id = req.params.id
         const filter = { _id: new ObjectId(id) }
@@ -415,10 +417,10 @@ async function run() {
     })
 
     // get adopt data by owner email-----------
-    app.get("/requestedForAdoptByOwnerEmail", async (req, res) => {
+    app.get("/requestedForAdoptByOwnerEmail", verifyToken, async (req, res) => {
       try {
         const ownerEmail = req?.query?.email?.toLocaleLowerCase().trim()
-    
+
         const filter = { ownerEmail: ownerEmail }
         const result = await collectionOfAdoptPets.find(filter).toArray()
         res.send(result)
@@ -429,7 +431,7 @@ async function run() {
 
     // available pets-----------
 
-    app.get("/availablePets", async (req, res) => {
+    app.get("/availablePets", verifyToken, async (req, res) => {
       try {
         const adoptPetsId = await collectionOfAdoptPets.find({}, { projection: { petId: 1 } }).toArray()
         const petIds = adoptPetsId
@@ -446,7 +448,7 @@ async function run() {
     })
 
     //  post create donation campaign data----------------
-    app.post("/createDonationCampaign", async (req, res) => {
+    app.post("/createDonationCampaign", verifyToken, async (req, res) => {
       try {
         const createDonationCampaign = {
           ...req.body,
@@ -461,20 +463,20 @@ async function run() {
     })
 
     // get create donation campaign  data-------------
-    app.get("/cdcData", async (req, res) => {
+    app.get("/cdcData", verifyToken, async (req, res) => {
       try {
         const query = {}
         const result = await createDonationCampaignCollection.find(query).toArray()
 
         res.send(result)
-       
+
       } catch (err) {
         res.status(500).send({ err: err.message })
       }
     })
 
     // update cdcData by admin------------
-    app.patch("/updateCdcDataByAdmin/:id", async (req, res) => {
+    app.patch("/updateCdcDataByAdmin/:id", verifyToken, verifyAdmin, async (req, res) => {
       try {
         const id = req.params.id
         const filter = { _id: new ObjectId(id) }
@@ -490,7 +492,7 @@ async function run() {
     })
 
     // delete cdcData by admin-------------
-    app.delete("/deleteCdcDataByAdmin/:id", async (req, res) => {
+    app.delete("/deleteCdcDataByAdmin/:id", verifyToken, verifyAdmin, async (req, res) => {
       try {
         const id = req.params.id
         const filter = { _id: new ObjectId(id) }
@@ -501,9 +503,9 @@ async function run() {
       }
     })
 
- 
+
     // cdcStatus update by admin-------------
-    app.patch("/cdcStatusUpdateByAdmin/:id", async (req, res) => {
+    app.patch("/cdcStatusUpdateByAdmin/:id", verifyToken, verifyAdmin, async (req, res) => {
       try {
         const id = req.params.id;
         const filter = { _id: new ObjectId(id) };
@@ -524,7 +526,7 @@ async function run() {
 
 
     // get specific cdcData by id-----------
-    app.get("/cdcData/:id", async (req, res) => {
+    app.get("/cdcData/:id", verifyToken, async (req, res) => {
       try {
         const id = req.params.id
         const filter = { _id: new ObjectId(id) }
@@ -536,7 +538,7 @@ async function run() {
     })
 
     // patch related API----------------
-    app.patch("/cdcData/:id", async (req, res) => {
+    app.patch("/cdcData/:id", verifyToken, async (req, res) => {
       try {
         const updatedData = req.body
         const id = req.params.id
@@ -561,7 +563,7 @@ async function run() {
     })
 
     // patch by status-----------
-    app.patch("/cdcData/:id/status", async (req, res) => {
+    app.patch("/cdcData/:id/status", verifyToken, async (req, res) => {
       try {
         const id = req.params.id
         const filter = { _id: new ObjectId(id) }
@@ -575,7 +577,7 @@ async function run() {
     })
 
     // get dpData and cdcData by aggregation-----------
-    app.get("/cdcDataByEmail", async (req, res) => {
+    app.get("/cdcDataByEmail", verifyToken, async (req, res) => {
       try {
         const email = req?.query?.email?.toLowerCase()
         if (!email) {
@@ -649,10 +651,10 @@ async function run() {
 
 
     // stripe payment related API------------
-    app.post("/create_payment_intent", async (req, res) => {
+    app.post("/create_payment_intent", verifyToken, async (req, res) => {
       try {
         const { donationAmount } = req.body
-        
+
         if (!donationAmount) {
           return res.status(400).send({ error: "donationAmount is require" })
         }
@@ -670,7 +672,7 @@ async function run() {
     })
 
     // post to donation payment collection--------
-    app.post("/donationPayment", async (req, res) => {
+    app.post("/donationPayment", verifyToken, async (req, res) => {
       try {
         const details = req.body
         const result = await collectionOfDonationPayment.insertOne(details)
@@ -690,7 +692,7 @@ async function run() {
     })
 
     // get donation data from collectionOfDonationPayment by email-------------
-    app.get("/donationPayment/:id", async (req, res) => {
+    app.get("/donationPayment/:id", verifyToken, async (req, res) => {
       try {
         const id = req.params.id
         //  console.log(typeof(id))
@@ -767,7 +769,7 @@ async function run() {
     })
 
     // delete for refund------------
-    app.delete("/refund/:id", async (req, res) => {
+    app.delete("/refund/:id", verifyToken, async (req, res) => {
       try {
         const id = req.params.id
         const filter = { _id: new ObjectId(id) }
