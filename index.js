@@ -62,7 +62,7 @@ async function run() {
     // jwt---------------
     app.post("/jwt", async (req, res) => {
       const userEmail = req.body;
-      // console.log(userEmail)
+
       const token = jwt.sign(userEmail, process.env.ACCESS_TOKEN_KEY, { expiresIn: '1h' })
       res.send({ token })
     })
@@ -88,7 +88,7 @@ async function run() {
     app.post("/loginUsers", async (req, res) => {
       try {
         const loginUsers = req.body
-        console.log("login user=", loginUsers)
+    
         if (!loginUsers.email) {
           return res.status(400).send({ error: "email is required" })
         }
@@ -185,47 +185,47 @@ async function run() {
     })
 
     // update allPet by admin------------
-     app.patch("/updateAllPetByAdmin/:id",async(req,res)=>{
-            try{
-                const id = req.params.id
-                const updatedData=req.body
-                 const query={_id:new ObjectId(id)}
-                 const updatedDoc={
-                  $set:updatedData
-                 }
-                 const result=await collectionsOfPets.updateOne(query,updatedDoc)
-                 res.send(result)
-            }catch(err){
-              res.status(500).send({error:err.message})
-            }
-     })
-    
-    //  delete pet from allPet by admin-------------
-    app.delete("/deletePetByAdmin/:id",async(req,res)=>{
-          try{
-              const id = req.params.id
-              const query={_id:new ObjectId(id)}
-              const result = await collectionsOfPets.deleteOne(query)
-              res.send(result)
-          }catch(err){
-            res.status(500).send({error:err.message})
-          }
+    app.patch("/updateAllPetByAdmin/:id", async (req, res) => {
+      try {
+        const id = req.params.id
+        const updatedData = req.body
+        const query = { _id: new ObjectId(id) }
+        const updatedDoc = {
+          $set: updatedData
+        }
+        const result = await collectionsOfPets.updateOne(query, updatedDoc)
+        res.send(result)
+      } catch (err) {
+        res.status(500).send({ error: err.message })
+      }
     })
-  
+
+    //  delete pet from allPet by admin-------------
+    app.delete("/deletePetByAdmin/:id", async (req, res) => {
+      try {
+        const id = req.params.id
+        const query = { _id: new ObjectId(id) }
+        const result = await collectionsOfPets.deleteOne(query)
+        res.send(result)
+      } catch (err) {
+        res.status(500).send({ error: err.message })
+      }
+    })
+
     // status update by admin----------
-    app.patch("/statusUpdateByAdmin/:id",async(req,res)=>{
-         try{
-              const id = req.params.id
-              const updatedStatus=req.body
-              const query={_id:new ObjectId(id)}
-              const updatedDoc={
-                $set:updatedStatus
-              }
-              const result = await collectionsOfPets.updateOne(query,updatedDoc)
-              res.send(result)
-         }catch(err){
-            res.status(500).send({error:err.message})
-         }
+    app.patch("/statusUpdateByAdmin/:id", async (req, res) => {
+      try {
+        const id = req.params.id
+        const updatedStatus = req.body
+        const query = { _id: new ObjectId(id) }
+        const updatedDoc = {
+          $set: updatedStatus
+        }
+        const result = await collectionsOfPets.updateOne(query, updatedDoc)
+        res.send(result)
+      } catch (err) {
+        res.status(500).send({ error: err.message })
+      }
     })
 
     // allData -----------------
@@ -418,7 +418,7 @@ async function run() {
     app.get("/requestedForAdoptByOwnerEmail", async (req, res) => {
       try {
         const ownerEmail = req?.query?.email?.toLocaleLowerCase().trim()
-        console.log(ownerEmail)
+    
         const filter = { ownerEmail: ownerEmail }
         const result = await collectionOfAdoptPets.find(filter).toArray()
         res.send(result)
@@ -467,11 +467,61 @@ async function run() {
         const result = await createDonationCampaignCollection.find(query).toArray()
 
         res.send(result)
-        console.log(result)
+       
       } catch (err) {
         res.status(500).send({ err: err.message })
       }
     })
+
+    // update cdcData by admin------------
+    app.patch("/updateCdcDataByAdmin/:id", async (req, res) => {
+      try {
+        const id = req.params.id
+        const filter = { _id: new ObjectId(id) }
+        const updatedCdcData = req.body
+        const updatedDoc = {
+          $set: updatedCdcData
+        }
+        const result = await createDonationCampaignCollection.updateOne(filter, updatedDoc)
+        res.send(result)
+      } catch (err) {
+        res.status(500).send({ error: err.message })
+      }
+    })
+
+    // delete cdcData by admin-------------
+    app.delete("/deleteCdcDataByAdmin/:id", async (req, res) => {
+      try {
+        const id = req.params.id
+        const filter = { _id: new ObjectId(id) }
+        const result = await createDonationCampaignCollection.deleteOne(filter)
+        res.send(result)
+      } catch (err) {
+        res.status(500).send({ error: err.message })
+      }
+    })
+
+ 
+    // cdcStatus update by admin-------------
+    app.patch("/cdcStatusUpdateByAdmin/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const { status } = req.body;
+
+        console.log("Updating campaign ID:", id, "to status:", status);
+
+        const updatedStatus = { $set: { status: status } };
+        const result = await createDonationCampaignCollection.updateOne(filter, updatedStatus);
+
+        console.log("Update Result:", result);
+        res.send(result);
+      } catch (err) {
+        console.error(err);
+        res.status(500).send({ error: err.message });
+      }
+    });
+
 
     // get specific cdcData by id-----------
     app.get("/cdcData/:id", async (req, res) => {
@@ -602,7 +652,7 @@ async function run() {
     app.post("/create_payment_intent", async (req, res) => {
       try {
         const { donationAmount } = req.body
-        console.log(donationAmount, "donationAmount")
+        
         if (!donationAmount) {
           return res.status(400).send({ error: "donationAmount is require" })
         }
