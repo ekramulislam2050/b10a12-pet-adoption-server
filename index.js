@@ -46,6 +46,7 @@ async function run() {
     // verifyToken--------------------
 
     const verifyToken = (req, res, next) => {
+       console.log("authorization=",req.headers.authorization)
       if (!req.headers.authorization) {
         return res.status(401).send("unAuthorization")
       }
@@ -107,7 +108,7 @@ async function run() {
     // get login user----------------
     app.get("/loginUsers", verifyToken, async (req, res) => {
       try {
-        console.log("req.email in route:", req.email);
+     
         const loginUsers = await collectionOfLoginUser.find({}).toArray()
         res.send(loginUsers)
       } catch (err) {
@@ -178,7 +179,7 @@ async function run() {
           adopted: false,
 
         }
-        // console.log("allPet",allPet)
+       
         const result = await collectionsOfPets.insertOne(allPet)
         res.send(result)
       } catch (err) {
@@ -511,15 +512,15 @@ async function run() {
         const filter = { _id: new ObjectId(id) };
         const { status } = req.body;
 
-        console.log("Updating campaign ID:", id, "to status:", status);
+       
 
         const updatedStatus = { $set: { status: status } };
         const result = await createDonationCampaignCollection.updateOne(filter, updatedStatus);
 
-        console.log("Update Result:", result);
+      
         res.send(result);
       } catch (err) {
-        console.error(err);
+       
         res.status(500).send({ error: err.message });
       }
     });
@@ -695,7 +696,7 @@ async function run() {
     app.get("/donationPayment/:id", verifyToken, async (req, res) => {
       try {
         const id = req.params.id
-        //  console.log(typeof(id))
+       
         const query = { petId: id }
         const result = await collectionOfDonationPayment.find(query).toArray()
         res.send(result)
