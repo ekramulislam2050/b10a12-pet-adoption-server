@@ -23,6 +23,31 @@ const client = new MongoClient(uri, {
   }
 });
 
+// verifyToken--------------------
+
+const verifyToken = (req, res, next) => {
+  console.log("authorization=", req.headers.authorization)
+  if (!req.headers.authorization) {
+    return res.status(401).send("unAuthorization")
+  }
+  const token = req.headers.authorization.split(" ")[1]
+  jwt.verify(token, process.env.ACCESS_TOKEN_KEY, (err, decoded) => {
+    if (err) {
+      return res.status(403).send("forbidden access")
+    }
+    req.email = decoded.email;
+    req.decoded = decoded;
+    next()
+  })
+}
+
+// jwt---------------
+app.post("/jwt", async (req, res) => {
+  const userEmail = req.body;
+
+  const token = jwt.sign(userEmail, process.env.ACCESS_TOKEN_KEY, { expiresIn: '1h' })
+  res.send({ token })
+})
 
 async function run() {
   try {
@@ -43,31 +68,7 @@ async function run() {
     const collectionOfLoginUser = db.collection("loginUsers")
 
 
-    // verifyToken--------------------
 
-    const verifyToken = (req, res, next) => {
-       console.log("authorization=",req.headers.authorization)
-      if (!req.headers.authorization) {
-        return res.status(401).send("unAuthorization")
-      }
-      const token = req.headers.authorization.split(" ")[1]
-      jwt.verify(token, process.env.ACCESS_TOKEN_KEY, (err, decoded) => {
-        if (err) {
-          return res.status(403).send("forbidden access")
-        }
-        req.email = decoded.email;     
-        req.decoded = decoded;
-        next()
-      })
-    }
-
-    // jwt---------------
-    app.post("/jwt", async (req, res) => {
-      const userEmail = req.body;
-
-      const token = jwt.sign(userEmail, process.env.ACCESS_TOKEN_KEY, { expiresIn: '1h' })
-      res.send({ token })
-    })
 
     // middleware very admin------------
     const verifyAdmin = async (req, res, next) => {
@@ -108,7 +109,7 @@ async function run() {
     // get login user----------------
     app.get("/loginUsers", verifyToken, async (req, res) => {
       try {
-     
+
         const loginUsers = await collectionOfLoginUser.find({}).toArray()
         res.send(loginUsers)
       } catch (err) {
@@ -179,7 +180,7 @@ async function run() {
           adopted: false,
 
         }
-       
+
         const result = await collectionsOfPets.insertOne(allPet)
         res.send(result)
       } catch (err) {
@@ -512,15 +513,15 @@ async function run() {
         const filter = { _id: new ObjectId(id) };
         const { status } = req.body;
 
-       
+
 
         const updatedStatus = { $set: { status: status } };
         const result = await createDonationCampaignCollection.updateOne(filter, updatedStatus);
 
-      
+
         res.send(result);
       } catch (err) {
-       
+
         res.status(500).send({ error: err.message });
       }
     });
@@ -696,7 +697,7 @@ async function run() {
     app.get("/donationPayment/:id", verifyToken, async (req, res) => {
       try {
         const id = req.params.id
-       
+
         const query = { petId: id }
         const result = await collectionOfDonationPayment.find(query).toArray()
         res.send(result)
