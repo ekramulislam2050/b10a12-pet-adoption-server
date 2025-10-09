@@ -45,7 +45,7 @@ const verifyToken = (req, res, next) => {
 app.post("/jwt", async (req, res) => {
   const userEmail = req.body;
 
-  const token = jwt.sign(userEmail, process.env.ACCESS_TOKEN_KEY, { expiresIn: '1h' })
+  const token = jwt.sign(userEmail, process.env.ACCESS_TOKEN_KEY, { expiresIn: '12h' })
   res.send({ token })
 })
 
@@ -796,3 +796,4 @@ app.get("/", async (req, res) => {
 app.listen(port, () => {
   console.log(`pet world is running : ${port}`)
 })
+
