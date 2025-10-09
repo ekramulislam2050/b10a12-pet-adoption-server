@@ -653,7 +653,7 @@ async function run() {
 
 
     // stripe payment related API------------
-    app.post("/create_payment_intent", verifyToken, async (req, res) => {
+    app.post("/create_payment_intent",  async (req, res) => {
       try {
         const { donationAmount } = req.body
 
