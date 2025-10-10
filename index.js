@@ -52,10 +52,10 @@ app.post("/jwt", async (req, res) => {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    // await client.db("admin").command({ ping: 1 });
+    // console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
     // collections-----------------
     const db = client.db("pet_adopt_nest")
@@ -88,14 +88,14 @@ async function run() {
     }
 
     // post login users----------
-    app.post("/loginUsers", async (req, res) => {
+    app.post("/signInUser", async (req, res) => {
       try {
-        const loginUsers = req.body
-
-        if (!loginUsers.email) {
-          return res.status(400).send({ error: "email is required" })
-        }
-        const existingUser = await collectionOfLoginUser.findOne({ email: loginUsers.email })
+        const loginUsers = req?.body
+       
+        // if (!loginUsers.email) {
+        //   return res.status(400).send({ error: "email is required" })
+        // }
+        const existingUser = await collectionOfLoginUser.findOne({ email: loginUsers?.email })
         if (existingUser) {
           return res.send({ message: "user already exist" })
         }
