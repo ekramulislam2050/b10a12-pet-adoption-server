@@ -92,9 +92,9 @@ async function run() {
       try {
         const loginUsers = req?.body
        
-        // if (!loginUsers.email) {
-        //   return res.status(400).send({ error: "email is required" })
-        // }
+        if (!loginUsers.email) {
+          return res.status(400).send({ error: "email is required" })
+        }
         const existingUser = await collectionOfLoginUser.findOne({ email: loginUsers?.email })
         if (existingUser) {
           return res.send({ message: "user already exist" })
