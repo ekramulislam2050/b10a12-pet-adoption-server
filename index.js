@@ -656,7 +656,7 @@ async function run() {
     app.post("/create_payment_intent",  async (req, res) => {
       try {
         const { donationAmount } = req.body
-
+            console.log("donationAmount=",donationAmount)
         if (!donationAmount) {
           return res.status(400).send({ error: "donationAmount is require" })
         }
@@ -665,6 +665,8 @@ async function run() {
           currency: "usd",
           payment_method_types: ['card']
         })
+        console.log('PaymentIntent ID:', paymentIntent.id)
+        console.log(' paymentIntent.client_secret', paymentIntent.client_secret)
         res.send({
           clientSecret: paymentIntent.client_secret
         })
