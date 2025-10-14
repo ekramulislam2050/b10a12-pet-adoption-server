@@ -10,6 +10,14 @@ const stripe = require("stripe")(process.env.STRIPE_PAYMENT_SK)
 // middleware----------
 app.use(cors())
 app.use(express.json())
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://pet-adoption-client-10502.web.app",
+    "https://pet-adoption-client-10502.firebaseapp.com"
+  ],
+  credentials: true
+}));
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.hhpkb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
