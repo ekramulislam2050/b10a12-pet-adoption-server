@@ -240,7 +240,7 @@ async function run() {
       }
     })
 
-    // allData -----------------
+    // get allData from db-----------------
     app.get("/allPet", verifyToken, async (req, res) => {
       try {
         const pets = await collectionsOfPets.find({}).toArray()
